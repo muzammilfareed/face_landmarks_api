@@ -1,0 +1,1 @@
+web: gunicorn face_landmarks_api.wsgi --log-file -
