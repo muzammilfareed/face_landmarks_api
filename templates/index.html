@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+
+<section>
+<!--<div class="row">-->
+  <div class="col-md-4 mx-auto mt-2">
+    <video id="webcam" class="img-fluid"  style="display: block;" > </video>
+    <canvas id="canvas" class="d-none"></canvas>
+    <img class="img-fluid" src="{% static 'FaceMaskok.png' %}" style="position: absolute; left: 0px; padding-left: 15px; padding-right: 15px; top: 0%; opacity: 0.6; display: block;">
+    <br>
+  </div>
+<!--</div>-->
+
+<div class="row button-hide d-none">
+  <div class="col-md-4 mx-auto mt-2">
+    <button class="tracking_button" id="btn"> <img src="{% static 'dot.png' %}" width="40" height="40"> <p style=" left:0%; top:0%; margin : 0"> Start Calibration </p> </button>
+    <center><span id="instruction" style="color: red; "></span></center>
+    <br>
+    <center><p>Make sure that :</p></center>
+    <ul style="list-style-type:disc;text-align: left;">
+      <li>Your face is visible</li>
+      <li>You have good light in your room</li>
+      <li>There is no strong light behind your back</li>
+      <li>There is no light reflections on your glasses</li>
+    </ul>
+  </div>
+</div>
+
+
+</section>
+</div>
+
+
+
+
+
+$(function(){
+
+    ////////////////// webcam section //////////////////////
+    const webcamElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('canvas');
+    const webcam = new Webcam(webcamElement, 'user', canvasElement);
+    webcam.start()
+    .then(result =>{
+        console.log("webcam started");
+    })
+    .catch(err => {
+        console.log(err);
+    });
+    ///////////////////// end webcam section /////////////////
+
+    setInterval(check_person_in_frame,1000)
+    function check_person_in_frame(){
+    let picture = webcam.snap();
+    var url = ''
+    let height = screen.height;
+    let width = screen.width;
+    form_data = new FormData();
+    form_data.append('screen_width',width)
+    form_data.append('screen_height',height)
+    form_data.append('image',picture)
+    form_data.append('frame_counter',0)
+    var data_list = []
+    var url = '/get_iris_data/'
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: form_data,
+        contentType: false,
+        processData: false,
+        success: function(data){
+            console.log(data)
+            if(data.center_flag==false && data.verification_response!=3){
+              $("#instruction").text("Please, Corect your head position!")
+              $("#btn").removeAttr("href");
+              $("#btn").css( "background-color", "red");
+            }
+            else{
+              $("#instruction").text("")
+
+              $("#btn").css( "background-color", "green");
+            }
+            },
+        });
+    };
+
+});
+</body>
+</html>
